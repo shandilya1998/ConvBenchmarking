@@ -118,7 +118,6 @@ class Conv2d(torch.nn.Module):
         out_channels,
         kernel_size,
         stride,
-        activation,
         bias = True,
         bound = 5,
     ):
@@ -156,7 +155,6 @@ class Conv2d(torch.nn.Module):
         self.filter = torch.nn.Parameter(self.filter)
         torch.nn.init.kaiming_uniform_(self.filter, a=math.sqrt(5))
         self.out = torch.zeros(bs, self.out_channels, h_out, w_out)
-        self.activation = activation
 
     def calculate_output_shape(self, input_shape):
         return (

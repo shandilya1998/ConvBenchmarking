@@ -1,4 +1,5 @@
 import torch
+from conv import decompositions
 
 class Conv2d(torch.nn.Module):
     def __init__(
@@ -42,46 +43,26 @@ class Conv2d(torch.nn.Module):
         self.filter = torch.nn.Parameter(self.filter)
         torch.nn.init.kaiming_uniform_(self.filter, a=math.sqrt(5))
         self.out = torch.zeros(bs, self.out_channels, h_out, w_out)  
+        self.layer = torch.nn.Conv2d(
+            in_channels = self.in_channels,
+            out_channels = self.out_channels,
+            kernel_size = self.kernel_size,
+            stride = self.stride, 
+        )
+        rank = rank = max(self.layer.weight.data.numpy().shape)//3
+        self.layer = decompositions.tucker_decomposition_conv_layer(
+            self.layer,
+            rank
+        )
 
     def calculate_output_shape(self, input_shape):
         return (
             input_shape[0],
             self.out_channels,
-            int((input_shape[-2]-self.kernel_size[0])/self.stride[0] + 1),
+            int((input_shape[-2]-self.kernel_size[0])/self.stride[0] + 1), 
             int((input_shape[-1]-self.kernel_size[1])/self.stride[1] + 1)
-        )
-
-    def im2col(self, x, bs, h, w):
-        rows = []
-        for b in range(bs):
-            for i in range(0, h-self.kernel_size[0]+1, self.stride[0]):
-                for j in range(0, w-self.kernel_size[1])+1, self.stride[1]:
-                    inp = x[
-                        b, 
-                        :, 
-                        i:i+self.kernel_size[0], 
-                        j:j+self.kernel_size[1]
-                    ]
-                    rows.append(inp.flatten().unsqueeze(0))
-        rows = torch.cat(rows, dim = 0).transpose(0, 1)
-        return rows
-        
-    def col2im(self, x, bs, h_out, w_out):
-        cols = x.shape[-1]
-        items = []
-        for i in range(0, cols, h_out*w_out):
-            item = x[:, col:col+h_out*w_out]
-            items.append(item.reshape(self.out_channels, h_out, w_out).unsqueeze(0))
-        out = torch.cat(items, dim = 0)
-        return out
-                      
+        )   
 
     def forward(self, x):
-        f = self.filter.flatten(1, -1)
-        bs, _, h_out, w_out = self.calculate_output_shape(x.shape)
-        h = x.shape[2]
-        w = x.shape[3]
-        x_rows = self.im2col(x, bs, h, w)
-        out_rows = torch.matmul(f, x_rows)
-        out = self.col2im(out_rows, bs, h_out, w_out)
-        return out
+        return self.layer(x)
+
