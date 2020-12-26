@@ -14,6 +14,8 @@ class Test:
             kernel_size = config['kernel_size'],
             stride = config['stride'],
         )
+        if config['gpu']:
+            self.layer = self.layer.cuda()
         self.built = True
 
     def reset(self):

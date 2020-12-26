@@ -1,11 +1,12 @@
 from test import Test
-from conv import naive, winograd, im2col, tucker_conv, cp_conv, fft
+from conv import naive, winograd, im2col, cp_conv, fft
 from tqdm import tqdm
 import torch
 
 def run(
-    imp, 
-    gpu = False
+    imp,
+    results,
+    gpu = False,
     ):
     layer = None
     if imp == 'naive':
@@ -29,17 +30,18 @@ def run(
 
     test = Test(layer, gpu)
     batch_size = 128 if gpu else 8
-    in_channels = [3, 128, 1024]
-    out_channels = [64, 512, 1024]
+    in_channels = [3, 64, 512]
+    out_channels = [3, 64, 512]
     kernel_size = [3, 15, 64]
     stride = [1]
-    in_size = [64, 256, 1024]
+    in_size = [128, 1024]
     configs = []
+ 
     for c in in_channels:
         for m in out_channels:
             for size in in_size:
                 for s in stride:
-                    for r in kernel_size:
+                    for r in kernel_size:                        
                         config = {}
                         config['implementation'] = imp
                         config['in_channels'] = c
@@ -48,21 +50,25 @@ def run(
                         config['stride'] = s
                         config['size'] = size
                         config['batch_size'] = batch_size
-                        configs.append(config)
+                        config['gpu'] = gpu
+                        if config['in_channels'] != config['out_channels']:
+                            configs.append(config)
 
-    results = []
+    print('number of configurations')
+    print(len(configs))
+     
     for config in tqdm(configs):
         test.build(config)
         x = torch.rand(
-            (
+            (   
                 config['batch_size'], 
                 config['in_channels'],
                 config['size'],
                 config['size']
-            )
-        )
+            )   
+        )   
+        if gpu:
+            x = x.cuda() 
         results.append(test(x))
 
-    df = pd.DataFrane(results)
-
-    df.to_csv('outputs/results.csv') 
+    return results 
