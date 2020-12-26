@@ -11,7 +11,12 @@ def cp_decomposition_conv_layer(layer, rank):
 
     # Perform CP decomposition on the layer weight tensorly. 
     last, first, vertical, horizontal = \
-        parafac(layer.weight.data, rank=rank, init='svd')
+        parafac(layer.weight.data.numpy(), rank=rank)
+
+    last = torch.Tensor(last)
+    first = torch.Tensor(first)
+    vertical = torch.Tensor(vertical)
+    horizontal = torch.Tensor(horizontal)
 
     pointwise_s_to_r_layer = torch.nn.Conv2d(in_channels=first.shape[0], \
             out_channels=first.shape[1], kernel_size=1, stride=1, padding=0, 
@@ -53,7 +58,7 @@ def estimate_ranks(layer):
     be performed on, and estimates the ranks of the matrices using VBMF 
     """
 
-    weights = layer.weight.data
+    weights = layer.weight.data.numpy()
     unfold_0 = tl.base.unfold(weights, 0) 
     unfold_1 = tl.base.unfold(weights, 1)
     _, diag_0, _, _ = VBMF.EVBMF(unfold_0)
@@ -71,8 +76,8 @@ def tucker_decomposition_conv_layer(layer):
     ranks = estimate_ranks(layer)
     print(layer, "VBMF Estimated ranks", ranks)
     core, [last, first] = \
-        partial_tucker(layer.weight.data, \
-            modes=[0, 1], ranks=ranks, init='svd')
+        partial_tucker(layer.weight.data.numpy(), \
+            modes=[0, 1], ranks=ranks)
 
     # A pointwise convolution that reduces the channels from S to R3
     first_layer = torch.nn.Conv2d(in_channels=first.shape[0], \

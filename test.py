@@ -8,7 +8,6 @@ class Test:
 
     def build(self, config):
         self.config = config
-        print(config)
         self.layer = self.imp(
             in_channels = config['in_channels'],
             out_channels = config['out_channels'],

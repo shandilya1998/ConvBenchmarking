@@ -1,4 +1,5 @@
 import torch
+import math
 from conv import decompositions
 
 class Conv2d(torch.nn.Module):
@@ -42,7 +43,6 @@ class Conv2d(torch.nn.Module):
         )   
         self.filter = torch.nn.Parameter(self.filter)
         torch.nn.init.kaiming_uniform_(self.filter, a=math.sqrt(5))
-        self.out = torch.zeros(bs, self.out_channels, h_out, w_out)  
         self.layer = torch.nn.Conv2d(
             in_channels = self.in_channels,
             out_channels = self.out_channels,
@@ -52,7 +52,6 @@ class Conv2d(torch.nn.Module):
         rank = rank = max(self.layer.weight.data.numpy().shape)//3
         self.layer = decompositions.tucker_decomposition_conv_layer(
             self.layer,
-            rank
         )
 
     def calculate_output_shape(self, input_shape):

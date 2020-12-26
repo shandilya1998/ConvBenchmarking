@@ -1,4 +1,5 @@
 import torch
+import math
 
 class Conv2d(torch.nn.Module):
     def __init__(
@@ -41,7 +42,6 @@ class Conv2d(torch.nn.Module):
         )   
         self.filter = torch.nn.Parameter(self.filter)
         torch.nn.init.kaiming_uniform_(self.filter, a=math.sqrt(5))
-        self.out = torch.zeros(bs, self.out_channels, h_out, w_out)  
 
     def calculate_output_shape(self, input_shape):
         return (
@@ -55,7 +55,7 @@ class Conv2d(torch.nn.Module):
         rows = []
         for b in range(bs):
             for i in range(0, h-self.kernel_size[0]+1, self.stride[0]):
-                for j in range(0, w-self.kernel_size[1])+1, self.stride[1]:
+                for j in range(0, w-self.kernel_size[1]+1, self.stride[1]):
                     inp = x[
                         b, 
                         :, 
@@ -69,7 +69,7 @@ class Conv2d(torch.nn.Module):
     def col2im(self, x, bs, h_out, w_out):
         cols = x.shape[-1]
         items = []
-        for i in range(0, cols, h_out*w_out):
+        for col in range(0, cols, h_out*w_out):
             item = x[:, col:col+h_out*w_out]
             items.append(item.reshape(self.out_channels, h_out, w_out).unsqueeze(0))
         out = torch.cat(items, dim = 0)

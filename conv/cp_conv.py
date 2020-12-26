@@ -1,5 +1,6 @@
 import torch
 from conv import decompositions
+import math
 
 class Conv2d(torch.nn.Module):
     def __init__(
@@ -42,7 +43,6 @@ class Conv2d(torch.nn.Module):
         )   
         self.filter = torch.nn.Parameter(self.filter)
         torch.nn.init.kaiming_uniform_(self.filter, a=math.sqrt(5))
-        self.out = torch.zeros(bs, self.out_channels, h_out, w_out)  
         self.layer = torch.nn.Conv2d(
             in_channels = self.in_channels,
             out_channels = self.out_channels,

@@ -31,8 +31,8 @@ def run(
 
     test = Test(layer, gpu)
     batch_size = 128 if gpu else 8
-    in_channels = [1, 3, 128, 1024]
-    out_channels = [3, 64, 512, 1024]
+    in_channels = [3, 128, 1024]
+    out_channels = [64, 512, 1024]
     kernel_size = [3, 15, 64]
     stride = [1]
     in_size = [64, 256, 1024]
