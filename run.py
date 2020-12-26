@@ -18,8 +18,6 @@ def run(
         layer = fft.Conv2d
     elif imp == 'cp_conv':
         layer = cp_conv.Conv2d
-    elif imp == 'tucker_conv':
-        layer = tucker_conv.Conv2d
     else:
         raise( 
             ValueError(
