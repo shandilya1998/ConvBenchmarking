@@ -1,0 +1,1 @@
+{"implementation": "cp_conv", "in_channels": 3, "out_channels": 32, "kernel_size": 15, "stride": 1, "size": 64, "batch_size": 8, "gpu": false, "latency": 0.01630997657775879, "input_shape": [8, 3, 64, 64], "output_shape": [8, 32, 50, 50], "_step": 1, "_runtime": 4, "_timestamp": 1609003757}

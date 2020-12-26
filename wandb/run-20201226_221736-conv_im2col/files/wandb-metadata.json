@@ -1,0 +1,29 @@
+{
+    "os": "Darwin-19.6.0-x86_64-i386-64bit",
+    "python": "3.7.3",
+    "heartbeatAt": "2020-12-26T16:47:39.403491",
+    "startedAt": "2020-12-26T16:47:36.271361",
+    "docker": null,
+    "cpu_count": 4,
+    "cuda": null,
+    "args": [
+        "--gpu",
+        "false",
+        "--job-dir",
+        "outputs",
+        "--job-name",
+        "conv"
+    ],
+    "state": "running",
+    "codePath": "main.py",
+    "program": "main.py",
+    "git": {
+        "remote": "https://github.com/shandilya1998/ConvBenchmarking",
+        "commit": "f74cb257623f1a92834a736c4db9155d0a8e1f00"
+    },
+    "email": "shandilya.shreyas@gmail.com",
+    "root": "/Users/shreyasshandilya/Desktop/Shandilya/Padhai/CS6886/assignment7",
+    "host": "Shreyass-MacBook-Air.local",
+    "username": "shreyasshandilya",
+    "executable": "/Users/shreyasshandilya/Desktop/Shandilya/Padhai/CS6886/assignment7/venv/bin/python3"
+}

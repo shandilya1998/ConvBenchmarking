@@ -1,4 +1,4 @@
-FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-4
+FROM pytorch/pytorch:1.7.0-cuda11.0-cudnn8-devel
 WORKDIR /root
 
 ADD conv ./conv
@@ -8,4 +8,5 @@ COPY run.py ./run.py
 COPY test.py ./test.py
 
 RUN pip install -r requirements.txt
+RUN wandb login 4a30a34490a130dc21329fd04548bfd9f01cb1ec
 ENTRYPOINT ["python", "-u", "main.py"]

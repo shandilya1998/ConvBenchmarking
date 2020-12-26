@@ -26,11 +26,15 @@ if __name__=='__main__':
         '--job-dir', 
         help='path for saving images in gcs'
     )
+
+    parser.add_argument(
+        '--job-name',
+        help='name of the job being performed'
+    )
+
     args = parser.parse_args()
 
     imps = ['cp_conv', 'naive', 'winograd', 'im2col', 'fft']
-
-    random.shuffle(imps)
 
     results = []
 
@@ -45,7 +49,7 @@ if __name__=='__main__':
                 dev = device
             )
         )
-        results = run(imp, results, args.gpu)
+        results = run(imp, results, args.job_name, args.gpu)
     
     df = pd.DataFrame(results)
     df.to_csv(

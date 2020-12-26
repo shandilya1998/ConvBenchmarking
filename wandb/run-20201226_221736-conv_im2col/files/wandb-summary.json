@@ -1,0 +1,1 @@
+{"implementation": "im2col", "in_channels": 3, "out_channels": 64, "kernel_size": 3, "stride": 1, "size": 128, "batch_size": 8, "gpu": false, "latency": 5.027149200439453, "input_shape": [8, 3, 128, 128], "output_shape": [8, 64, 126, 126], "_step": 0, "_runtime": 8, "_timestamp": 1609001264}

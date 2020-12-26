@@ -2,10 +2,12 @@ from test import Test
 from conv import naive, winograd, im2col, cp_conv, fft
 from tqdm import tqdm
 import torch
+import wandb
 
 def run(
     imp,
     results,
+    job_name,
     gpu = False,
     ):
     layer = None
@@ -28,13 +30,21 @@ def run(
             )
         )
 
-    test = Test(layer, gpu)
+    id_ = '{name}_{imp}'.format(name = job_name, imp = imp)
+    
+    wandb.init(
+        id = id_, 
+        entity="shandilya1998", 
+        project="convbenchmark",
+        resume="allow"
+    )
+
     batch_size = 128 if gpu else 8
-    in_channels = [3, 64, 512]
-    out_channels = [3, 64, 512]
-    kernel_size = [3, 15, 64]
+    in_channels = [3, 32, 256]
+    out_channels = [32, 256]
+    kernel_size = [3, 15, 32]
     stride = [1]
-    in_size = [128, 1024]
+    in_size = [64, 256]
     configs = []
  
     for c in in_channels:
@@ -58,6 +68,7 @@ def run(
     print(len(configs))
      
     for config in tqdm(configs):
+        test = Test(layer, gpu)
         test.build(config)
         x = torch.rand(
             (   
@@ -69,6 +80,9 @@ def run(
         )   
         if gpu:
             x = x.cuda() 
-        results.append(test(x))
+        result = test(x)
+        results.append(result)
+        wandb.log(result)
+        del test
 
     return results 

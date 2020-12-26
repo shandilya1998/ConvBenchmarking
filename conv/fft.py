@@ -2,7 +2,7 @@ import math
 import torch
 from functools import partial
 from typing import Tuple, Union, Iterable
-from torch.fft import rfftn, irfftn
+from torch import rfftn, irfftn
 import torch.nn.functional as f
 
 def complex_matmul(a: torch.Tensor, b: torch.Tensor, groups: int = 1) -> torch.Tensor:

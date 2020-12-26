@@ -33,31 +33,35 @@ JOB_DIR=gs://${BUCKET_ID}/
 # Note: these files have already been copied over when the image was built
 
 # JOB_NAME: the name of your job running on AI Platform.
-JOB_NAME=custom_cpu_container_job_$(date +%Y%m%d_%H%M%S)
-
-gcloud beta ai-platform jobs submit prediction ${JOB_NAME} \
-    --region ${REGION} \
-    --master-image-uri ${IMAGE_URI} \
-    --config config.yaml \
-    -- \
-    --job-dir ${JOB_DIR} \
-    --gpu false \
-
-gcloud ai-platform jobs stream-logs ${JOB_NAME}
-
-# JOB_NAME: the name of your job running on AI Platform.
 JOB_NAME=custom_gpu_container_job_$(date +%Y%m%d_%H%M%S)
 
-gcloud beta ai-platform jobs submit prediction ${JOB_NAME} \
+gcloud beta ai-platform jobs submit training ${JOB_NAME} \
     --region ${REGION} \
     --master-image-uri ${IMAGE_URI} \
-    --scale-tier BASIC_GPU \
+    --scale-tier custom \
+    --master-machine-type n1-highmem-16 \
+    --master-accelerator count=1,type=nvidia-tesla-t4 \
     -- \
     --job-dir ${JOB_DIR} \
     --gpu true \
 
 # Stream the logs from the job
 gcloud ai-platform jobs stream-logs ${JOB_NAME}
+
+# JOB_NAME: the name of your job running on AI Platform.
+JOB_NAME=custom_cpu_container_job_$(date +%Y%m%d_%H%M%S)
+
+gcloud beta ai-platform jobs submit training ${JOB_NAME} \ 
+    --region ${REGION} \ 
+    --master-image-uri ${IMAGE_URI} \ 
+    --scale-tier custom \ 
+    --master-machine-type n1-highmem-16 \ 
+    --master-accelerator count=1,type=nvidia-tesla-t4 \ 
+    -- \ 
+    --job-dir ${JOB_DIR} \ 
+    --gpu false \ 
+ 
+gcloud ai-platform jobs stream-logs ${JOB_NAME} 
 
 # Verify the model was exported
 echo "Verify the model was exported:"

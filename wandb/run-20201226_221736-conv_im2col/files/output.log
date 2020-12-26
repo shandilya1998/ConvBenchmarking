@@ -1,0 +1,17 @@
+number of configurations
+36
+  0%|          | 0/36 [00:00<?, ?it/s]  3%|▎         | 1/36 [00:05<02:58,  5.09s/it]  3%|▎         | 1/36 [00:08<04:40,  8.01s/it]
+Traceback (most recent call last):
+  File "main.py", line 54, in <module>
+    results = run(imp, results, args.job_name, args.gpu)
+  File "/Users/shreyasshandilya/Desktop/Shandilya/Padhai/CS6886/assignment7/run.py", line 83, in run
+    result = test(x)
+  File "/Users/shreyasshandilya/Desktop/Shandilya/Padhai/CS6886/assignment7/test.py", line 28, in __call__
+    out = self.layer(x)
+  File "/Users/shreyasshandilya/Desktop/Shandilya/Padhai/CS6886/assignment7/venv/lib/python3.7/site-packages/torch/nn/modules/module.py", line 727, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/Users/shreyasshandilya/Desktop/Shandilya/Padhai/CS6886/assignment7/conv/im2col.py", line 84, in forward
+    x_rows = self.im2col(x, bs, h, w)
+  File "/Users/shreyasshandilya/Desktop/Shandilya/Padhai/CS6886/assignment7/conv/im2col.py", line 65, in im2col
+    rows.append(inp.flatten().unsqueeze(0))
+KeyboardInterrupt
