@@ -1,7 +1,8 @@
+import math
 import torch
 from functools import partial
 from typing import Tuple, Union, Iterable
-
+from torch.fft import rfftn, irfftn
 import torch.nn.functional as f
 
 def complex_matmul(a: torch.Tensor, b: torch.Tensor, groups: int = 1) -> torch.Tensor:
@@ -90,12 +91,12 @@ def fft_conv(
 
     # Perform fourier convolution -- FFT, matrix multiply, then IFFT
     # signal_ = signal_.reshape(signal_.size(0), groups, -1, *signal_.shape[2:])
-    signal_fr = torch.fft.rfftn(signal_, dim=tuple(range(2, signal.ndim)))
-    kernel_fr = torch.fft.rfftn(padded_kernel, dim=tuple(range(2, signal.ndim)))
+    signal_fr = rfftn(signal_, dim=tuple(range(2, signal.ndim)))
+    kernel_fr = rfftn(padded_kernel, dim=tuple(range(2, signal.ndim)))
 
     kernel_fr.imag *= -1
     output_fr = complex_matmul(signal_fr, kernel_fr, groups=groups)
-    output = torch.fft.irfftn(output_fr, dim=tuple(range(2, signal.ndim)))
+    output = irfftn(output_fr, dim=tuple(range(2, signal.ndim)))
 
     # Remove extra padded values
     crop_slices = [slice(0, output.size(0)), slice(0, output.size(1))] + [
@@ -154,7 +155,6 @@ class Conv2d(torch.nn.Module):
         )
         self.filter = torch.nn.Parameter(self.filter)
         torch.nn.init.kaiming_uniform_(self.filter, a=math.sqrt(5))
-        self.out = torch.zeros(bs, self.out_channels, h_out, w_out)
 
     def calculate_output_shape(self, input_shape):
         return (
@@ -166,7 +166,7 @@ class Conv2d(torch.nn.Module):
 
     def forward(self, x):
         return fft_conv(
-            signal = x,
+            x,
             self.filter,
             bias=self.bias,
             stride=self.stride,

@@ -1,4 +1,6 @@
+import math
 import torch
+from . import wincnn
 
 class Conv2d(torch.nn.Module):
     def __init__(
@@ -15,19 +17,26 @@ class Conv2d(torch.nn.Module):
         self.out_channels = out_channels
 
         if isinstance(kernel_size, int):
-            self.kernel_size = (kernel_size, kernel_size)
+            self.kernel_size = kernel_size
         elif isinstance(kernel_size, tuple):
-            assert kernel_size[0] == kernel_size[1]
+            if kernel_size[0] != kernel_size[1]:
+                raise(
+                    ValueError(
+                        'Expected a square filter, got a filter of shape `{shape}`'.format(shape = kernel_size)
+                    )
+                )
             self.kernel_size = kernel_size[0]
         else:
             raise ValueError('Kernel size must be an int or a tuple got {t}'.format(t = type(kernel_size)))
 
         if isinstance(stride, int):
-            self.stride = (stride, stride)
+            self.stride = stride
         elif isinstance(stride, tuple):
             self.stride = stride
         else:
             raise ValueError('Kernel size must be an int or a tuple got {t}'.format(t = type(kernel_size)))
+        if self.stride != 1:
+            raise(ValueError('Only stride of 1 supported, got `{s}`'.format(s = self.stride)))
         self.use_bias = bias
         if bias:
             self.bias = torch.Tensor(self.out_channels)
@@ -37,36 +46,37 @@ class Conv2d(torch.nn.Module):
         self.filter = torch.Tensor(
             self.out_channels,
             self.in_channels,
-            self.kernel_size[0],
-            self.kernel_size[1]
+            self.kernel_size,
+            self.kernel_size
         )
         self.filter = torch.nn.Parameter(self.filter)
         torch.nn.init.kaiming_uniform_(self.filter, a=math.sqrt(5))
-        self.out = torch.zeros(bs, self.out_channels, h_out, w_out)
-        self.B = tensor(
-            [[1.0, 0.0, 0.0, 0.0],
-             [0.0, 1.0, -1.0, 1.0],
-             [-1.0, 1.0, 1.0, 0.0],
-             [0.0, 0.0, 0.0, -1.0]])
-        self.B_T = B.transpose(1, 0)
-        self.G = tensor(
-            [[1.0, 0.0, 0.0],
-             [0.5, 0.5, 0.5],
-             [0.5, -0.5, 0.5],
-             [0.0, 0.0, 1.0]])
-        self.G_T = G.transpose(1, 0)
-        self.A = tensor([[1.0, 0.0],
-                    [1.0, 1.0],
-                    [1.0, -1.0],
-                    [0.0, -1.0]])
-        self.A_T = A.transpose(1, 0)
+        a = []
+        for i in range(math.floor(kernel_size/2)+1):
+            if i ==0:
+                a.append(0)
+            else:
+                a.extend([i, -i])
+        a = tuple(a)
+        self.A_T, self.G, self.B_T, self.f = wincnn.cookToomFilter(
+            a, 
+            2,
+            kernel_size
+        )
+        self.A_T = torch.Tensor(self.A_T.tolist())
+        self.G = torch.Tensor(self.G.tolist())
+        self.B_T = torch.Tensor(self.B_T.tolist())
+        self.f = torch.Tensor(self.f.tolist())
+        self.B = self.B_T.transpose(1, 0)
+        self.G_T = self.G.transpose(1, 0)
+        self.A = self.A_T.transpose(1, 0)
 
     def calculate_output_shape(self, input_shape):
         return (
             input_shape[0],
             self.out_channels,
-            int((input_shape[-2]-self.kernel_size[0])/self.stride[0] + 1),
-            int((input_shape[-1]-self.kernel_size[1])/self.stride[1] + 1)
+            int((input_shape[-2]-self.kernel_size)/self.stride + 1),
+            int((input_shape[-1]-self.kernel_size)/self.stride + 1)
         )
 
     def forward(self, x):
@@ -76,7 +86,7 @@ class Conv2d(torch.nn.Module):
         :param filter:
         :return: output
         """
-        N, C, H, W = input.size()
+        N, C, H, W = x.size()
         assert C == self.in_channels
         assert H == W
         m = 2
@@ -107,16 +117,16 @@ class Conv2d(torch.nn.Module):
                         vH = tH * (self.kernel_size - 1)
                         vW = tW * (self.kernel_size - 1)
                         V[c, b] = torch.matmul(self.B_T, torch.matmul(
-                            input[c, n, vH:vH + a, vW:vW + a], self.B))
-        M = torch.zeros(K, P, a, a)
+                            x[c, n, vH:vH + a, vW:vW + a], self.B))
+        M = torch.zeros(self.out_channels, P, a, a)
         for k in range(self.out_channels):
             for b in range(P):
                 for c in range(self.in_channels):
                     M[k, b] += U[k, c] * V[c, b]
         # M = torch.matmul(U, V)
         out_size = H - self.kernel_size + 1
-        Y = torch.zeros(K, N, out_size, out_size)
-        for k in range(K):
+        Y = torch.zeros(self.out_channels, N, out_size, out_size)
+        for k in range(self.out_channels):
             for n in range(N):
                 for tH in range(T):
                     for tW in range(T):

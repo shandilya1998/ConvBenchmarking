@@ -3,7 +3,7 @@ from tensorly.decomposition import parafac, partial_tucker
 import numpy as np
 import torch
 import torch.nn as nn
-from VBMF import VBMF
+from conv.VBMF import VBMF
 
 def cp_decomposition_conv_layer(layer, rank):
     """ Gets a conv layer and a target rank, 
